@@ -2,15 +2,13 @@ from telegram.ext import Updater
 from codeforces import CodeforcesAPI
 import logging
 from telegram.ext import CommandHandler
-from codeforces.api.json_objects import VerdictType
+from utils import unsolved_group
+from utils import random_problem
+import random
 
 updater = Updater(token='262573736:AAEfHFSGp-5YGJFIiDt8_TmSZMR0XCHjtTg')
 dispatcher = updater.dispatcher
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-
-
-
 
 
 api = CodeforcesAPI()
@@ -68,7 +66,33 @@ def last_submissions(bot, update, args):
     handle = args[1]
     submissions = api.user_status(handle, 1, count)
     for sub in submissions:
-        message += str(sub.problem.name) + ' Veredict: ' + str(VerdictType(sub.verdict)) + '\n'
+        message += str(sub.problem.name) + ' ---------> ' + str(sub.verdict.value) + '\n'
+    bot.sendMessage(chat_id=update.message.chat_id, text=message)
+
+def random_unsolved(bot, update, args):
+    if len(args) != 1:
+        error(bot, update)
+        return
+    unsolved = unsolved_group(args[0])
+    problem = random.choice(unsolved)
+    message = str(problem.contest_id) + str(problem.index) + ' ' + str(problem.name) + '\n'
+    bot.sendMessage(chat_id=update.message.chat_id, text=message)
+
+def randomp(bot, update, args):
+    if len(args) > 3:
+        error(bot, update)
+        return
+    string = ''
+    for word in args:
+        string += word + ' '
+    print(string)
+    string = string[0:len(string)-1]
+    print(string)
+    problem = random_problem(str(string))
+    if (problem == False):
+        error(bot, update)
+        return
+    message = str(problem.contest_id) + str(problem.index) + ' ' + str(problem.name) + '\n'
     bot.sendMessage(chat_id=update.message.chat_id, text=message)
 
 
@@ -76,24 +100,22 @@ def last_submissions(bot, update, args):
 
 
 
-
-
-
-
-
 # CREATE HANDLERS AND DISPATCHERS
-
+random_unsolved_handler = CommandHandler('random_unsolved', random_unsolved , pass_args = True)
 last_submissions_handler = CommandHandler('last_submissions', last_submissions , pass_args = True)
 rate_change_handler = CommandHandler('rate_change', rate_change, pass_args = True)
 handle_info_handler = CommandHandler('handle_info', handle_info, pass_args = True)
+randomp_handler = CommandHandler('randomp', randomp, pass_args = True)
 start_handler = CommandHandler('start', start)
 hello_handler = CommandHandler('hello',hello)
 
+dispatcher.add_handler(random_unsolved_handler)
 dispatcher.add_handler(last_submissions_handler)
 dispatcher.add_handler(handle_info_handler)
 dispatcher.add_handler(hello_handler)
 dispatcher.add_handler(rate_change_handler)
 dispatcher.add_handler(start_handler)
+dispatcher.add_handler(randomp_handler)
 
 updater.start_polling()
 updater.idle()
