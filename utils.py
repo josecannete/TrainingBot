@@ -33,9 +33,10 @@ def solved_group(handle):
     return groups(handle)[0]
 
 
+
 ## TAG GROUPS ##
 
-posible_groups = ['dp', 'constructive algorithms', 'dfs and similar', 'math', 'number theory', 'probabilities',
+posible_groups = ['', 'dp', 'constructive algorithms', 'dfs and similar', 'math', 'number theory', 'probabilities',
                   'graphs', 'brute force', 'implementation', 'data structures', 'hashing', 'string suffix structures',
                   'strings', 'sortings', 'flows', 'greedy', 'trees', 'matrices', 'binary search', 'geometry',
                   'games', 'two pointers', 'dsu', 'chinese remainder theorem', 'bitmasks', 'divide and conquer',
@@ -50,6 +51,14 @@ def problem_group(subject):
     return problem_group
 
 
+def problem_statistics_group(subject):
+    problem_statistics_group = []
+    if str(subject) in posible_groups:
+        formated = subject.replace(' ', '%20')
+        problem_statistics_group = list(api.problemset_problems([formated])['problemStatistics'])
+    return problem_statistics_group
+
+
 def random_problem(subject):
     subject_group = problem_group(subject)
     if len(subject_group) >= 1:
@@ -57,3 +66,26 @@ def random_problem(subject):
         return problem
     else:
         return False
+
+def easiest(handle, subject=''):
+    subject_group = problem_group(subject)
+    if len(subject_group) < 1:
+        return False
+    subject_statistics_list = problem_statistics_group(subject)
+    solved_list = solved_group(handle)
+    subject_statistics_list = sorted(subject_statistics_list,
+                                      key= lambda problem_statistics: problem_statistics.solved_count, reverse = False)
+    problem_stats = None
+    problem_ret = None
+    for stats in subject_statistics_list:
+        flag = False
+        for problem in solved_list:
+            if stats.index == problem.index and stats.contest_id == problem.contest_id:
+                flag = True
+        if flag == False:
+            problem_stats = stats
+    for problem in subject_group:
+        if problem.index == problem_stats.index and problem.contest_id == problem_stats.contest_id:
+            problem_ret = problem
+    return problem_ret
+
